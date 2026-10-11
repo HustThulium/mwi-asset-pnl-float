@@ -1,0 +1,11 @@
+{
+  "name": "mwi-asset-pnl-float",
+  "private": true,
+  "scripts": {
+    "check": "node --check asset-pnl-float.user.js",
+    "test": "node tests/verify.cjs && node tests/verify-mwitools-transition.cjs"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1"
+  }
+}
