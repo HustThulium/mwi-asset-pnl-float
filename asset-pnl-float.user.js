@@ -2,14 +2,12 @@
 // @name         银河奶牛放置 - 盈亏浮窗
 // @namespace    Thulium/mwi-asset-pnl-float
 // @author       Thulium
-// @version      0.1.19
+// @version      0.1.20
 // @license      MIT
 // @icon         data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2216%22%20fill%3D%22%23424d8e%22%2F%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22white%22%20stroke-width%3D%223%22%3E%3Crect%20x%3D%2212%22%20y%3D%2212%22%20width%3D%2240%22%20height%3D%2240%22%20rx%3D%225%22%2F%3E%3Cpath%20d%3D%22M12%2023h40M22%2044V34m10%2010V29m10%2015V37%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E
 // @description  将 MWITools 盈亏面板显示为可拖动、缩放的浮窗，支持六格、单项和完整模式；需先安装 MWITools。
 // @homepageURL  https://github.com/HustThulium/mwi-asset-pnl-float
 // @supportURL   https://github.com/HustThulium/mwi-asset-pnl-float/issues
-// @updateURL    https://raw.githubusercontent.com/HustThulium/mwi-asset-pnl-float/main/asset-pnl-float.user.js
-// @downloadURL  https://raw.githubusercontent.com/HustThulium/mwi-asset-pnl-float/main/asset-pnl-float.user.js
 // @match        https://www.milkywayidle.com/game*
 // @match        https://milkywayidle.com/game*
 // @match        https://test.milkywayidle.com/game*
@@ -21,6 +19,8 @@
 // @grant        GM_registerMenuCommand
 // @noframes
 // @run-at       document-idle
+// @downloadURL https://update.greasyfork.org/scripts/599765/%E9%93%B6%E6%B2%B3%E5%A5%B6%E7%89%9B%E6%94%BE%E7%BD%AE%20-%20%E7%9B%88%E4%BA%8F%E6%B5%AE%E7%AA%97.user.js
+// @updateURL https://update.greasyfork.org/scripts/599765/%E9%93%B6%E6%B2%B3%E5%A5%B6%E7%89%9B%E6%94%BE%E7%BD%AE%20-%20%E7%9B%88%E4%BA%8F%E6%B5%AE%E7%AA%97.meta.js
 // ==/UserScript==
 
 (() => {
@@ -323,7 +323,11 @@
   }
   function isCustomTab(button) {
     if (button.id === 'mwitools-asset-history-tab') return false;
-    return button.dataset.mwitoolsCharacterTab === 'true' || button.id === 'mwitools-planning-tab' || /^(公会|规划|收益|guild|planning|income)$/i.test(button.textContent.trim());
+    // Cloned tabs can inherit another panel's aria-controls/data attributes.
+    // Use observed identities, never editable labels or inherited controls.
+    return button.dataset.mwitoolsCharacterTab === 'true' ||
+      button.id === 'mwitools-planning-tab' || button.id === 'mwi-credit-sidebar-tab' ||
+      button.classList.contains('income-tab');
   }
   // Let exclusive MWITools panels take over before their own click handlers.
   // Closing our source first also removes stale display overrides before

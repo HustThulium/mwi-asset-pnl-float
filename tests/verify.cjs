@@ -19,17 +19,18 @@ const { chromium } = require('playwright');
       window.GM_setValue = (key, value) => { window.fixtureStore[key] = value; }; window.GM_registerMenuCommand = () => {};
       let active = false;
       const tab = document.querySelector('#mwitools-asset-history-tab'), host = document.querySelector('#mwitools-asset-history-panel'), nav = document.querySelector('nav'), native = document.querySelector('#native');
+      tab.dataset.mwiCreditTab = 'true'; tab.dataset.mwitoolsCharacterTab = 'true'; tab.setAttribute('aria-controls', 'mwi-credit-optimizer');
       function activate(value) { active = value; tab.setAttribute('aria-selected', String(value)); tab.dataset.active = String(value); host.hidden = !value; native.hidden = value; native.style.display = value ? 'none' : ''; if (value) nav.dataset.mwitoolsAssetActive = 'true'; else delete nav.dataset.mwitoolsAssetActive; }
       tab.addEventListener('click', e => { e.stopPropagation(); activate(!active); });
       for (const id of ['inventory', 'equipment']) document.getElementById(id).onclick = () => { activate(false); for (const button of nav.querySelectorAll('button:not(#mwitools-asset-history-tab)')) { const selected = button.id === id; button.setAttribute('aria-selected', String(selected)); button.classList.toggle('Mui-selected', selected); } };
       window.originalClicks = 0; document.querySelector('#original-action').onclick = () => window.originalClicks++;
       window.updateFixture = () => { if (active) document.querySelector('#value0').textContent = 'updated'; };
-      for (const [id, label] of [['mwitools-planning-tab', '规划'], ['guild-fixture-tab', '公会']]) {
+      for (const [id, label] of [['mwitools-planning-tab', '自定义计划'], ['mwi-credit-sidebar-tab', '公户哈基米'], ['income-fixture-tab', '自定义收入']]) {
         const button = document.createElement('button'); button.id = id; button.textContent = label; button.setAttribute('aria-selected', 'false'); nav.append(button);
-        const panel = document.createElement('section'); panel.id = id + '-panel'; panel.textContent = label + '内容'; panel.hidden = true; document.querySelector('#shell').append(panel);
+        const panel = document.createElement('section'); panel.id = id + '-panel'; button.setAttribute('aria-controls', 'mwi-credit-optimizer'); if (id === 'income-fixture-tab') button.className = 'income-tab'; else button.dataset.mwiCreditTab = 'true'; if (id === 'mwitools-planning-tab') button.dataset.mwitoolsCharacterTab = 'true'; panel.textContent = label + '内容'; panel.hidden = true; document.querySelector('#shell').append(panel);
         button.onclick = () => { const opening = button.getAttribute('aria-selected') !== 'true'; activate(false); for (const other of nav.querySelectorAll('button')) { if (other.id.endsWith('-tab') && other !== tab) { other.setAttribute('aria-selected', String(other === button && opening)); document.getElementById(other.id + '-panel').hidden = other !== button || !opening; } } native.hidden = opening; native.style.display = opening ? 'none' : ''; };
       }
-      for (const button of [tab, document.querySelector('#inventory'), document.querySelector('#equipment')]) button.addEventListener('click', () => { for (const id of ['mwitools-planning-tab', 'guild-fixture-tab']) { document.getElementById(id).setAttribute('aria-selected', 'false'); document.getElementById(id + '-panel').hidden = true; } });
+      for (const button of [tab, document.querySelector('#inventory'), document.querySelector('#equipment')]) button.addEventListener('click', () => { for (const id of ['mwitools-planning-tab', 'mwi-credit-sidebar-tab', 'income-fixture-tab']) { document.getElementById(id).setAttribute('aria-selected', 'false'); document.getElementById(id + '-panel').hidden = true; } });
     });
     await page.addScriptTag({ content: fs.readFileSync(__dirname + '/../asset-pnl-float.user.js', 'utf8') });
     assert.equal(await page.locator('#native').isVisible(), true);
@@ -44,7 +45,7 @@ const { chromium } = require('playwright');
     assert.equal(await page.evaluate(() => window.idleAttributeWrites), 0, 'closed plugin must not repeatedly write attributes');
     await page.evaluate(() => window.idleObserver.disconnect());
     assert.equal(await page.locator('#mwitools-asset-history-tab').getAttribute('aria-selected'), 'false');
-    for (const id of ['mwitools-planning-tab', 'guild-fixture-tab']) {
+    for (const id of ['mwitools-planning-tab', 'mwi-credit-sidebar-tab', 'income-fixture-tab']) {
       await page.locator('#' + id).click();
       await page.waitForTimeout(600);
       assert.equal(await page.locator('#' + id + '-panel').isVisible(), true);
@@ -105,7 +106,8 @@ const { chromium } = require('playwright');
     assert.equal(await page.locator('[data-progress]').textContent(), '1/1');
     assert.deepEqual(await page.evaluate(() => window.fixtureStore.layout.cycle), [3]);
     assert.equal(await page.evaluate(() => window.fixtureStore.layout.clickSwitch), false);
-    for (const id of ['mwitools-planning-tab', 'guild-fixture-tab']) {
+    await page.evaluate(() => { document.querySelector('#inventory').textContent = '收益'; document.querySelector('#mwitools-asset-history-tab').textContent = '我的账本'; });
+    for (const id of ['mwitools-planning-tab', 'mwi-credit-sidebar-tab', 'income-fixture-tab']) {
       await page.locator('#' + id).click();
       await page.waitForTimeout(1100); // More than two activation polling intervals.
       assert.equal(await page.locator('#' + id + '-panel').isVisible(), true);
